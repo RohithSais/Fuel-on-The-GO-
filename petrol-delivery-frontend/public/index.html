@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Delivery App</title>
+    
+    <!-- Include Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1,
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .button-container,
+        .form {
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.3s;
+            background-color: #007bff;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #fff;
+            color: #333;
+        }
+
+        #fuelOptions {
+            margin-top: 20px;
+        }
+
+        #fuelOptions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #fuelOptions li {
+            background: #007bff;
+            border: 1px solid #007bff;
+            margin: 5px 0;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            color: white;
+        }
+
+        #fuelOptions li:hover {
+            background-color: #0056b3;
+        }
+
+        #paymentOptions {
+            display: none;
+        }
+
+        #paymentOptions button {
+            margin: 10px 0;
+        }
+
+        #paymentOptions button#credit-card-button {
+            background-color: #007bff;
+        }
+
+        #paymentOptions button#netbanking-button {
+            background-color: #28a745;
+        }
+
+        #paymentOptions button#cod-button {
+            background-color: #ffc107;
+        }
+
+        #mapContainer {
+            margin-top: 20px;
+            display: none;
+        }
+
+        /* Set the height for the map container */
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        h2 {
+            margin: 0 0 15px 0;
+        }
+
+        p {
+            margin: 0 0 20px 0;
+        }
+
+        .modal button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            width: 100%; /* Full width buttons */
+        }
+
+        .modal button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Login/Register Interface -->
+        <h1>Fuel Delivery</h1>
+        <div id="buttonContainer" class="button-container">
+            <button id="registerButton" class="button">Register</button>
+            <button id="loginButton" class="button">Login</button>
+        </div>
+
+        <div id="registrationForm" class="form hidden">
+            <h2>Register</h2>
+            <form>
+                <input type="text" id="name" name="name" placeholder="Name" required>
+                <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <p><button type="submit" class="button">Submit</button></p>
+            </form>
+        </div>
+
+        <div id="loginForm" class="form hidden">
+            <h2>Login</h2>
+            <form>
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <input type="password" id="loginPassword" name="password" placeholder="Password" required>
+                <p><button type="submit" class="button">Login</button></p>
+            </form>
+        </div>
+
+        <!-- Main Interface -->
+        <div id="mainInterface" class="hidden">
+            <button id="orderButton">Order Fuel</button>
+
+            <!-- Fuel Options -->
+            <div id="fuelOptions" class="hidden">
+                <h2>Select Fuel Type</h2>
+                <ul>
+                    <li id="petrol-button">Petrol</li>
+                    <li id="diesel-button">Diesel</li>
+                </ul>
+            </div>
+
+            <!-- Payment Options -->
+            <div id="paymentOptions">
+                <h2>Select Payment Method</h2>
+                <p id="selectedFuel"></p>
+                <button id="credit-card-button">Pay with Credit/Debit Card</button>
+                <button id="netbanking-button">Pay with Net Banking</button>
+                <button id="cod-button">Cash on Delivery</button>
+            </div>
+
+            <!-- Map -->
+            <div id="mapContainer">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Permission Modal -->
+    <div id="permissionModal" class="modal">
+        <div class="modal-content">
+            <h2>Location Permission</h2>
+            <p>We need access to your location to provide better service.</p>
+            <button id="whileUsingBtn">While Using the App Only</button>
+            <button id="alwaysOnBtn">Always On</button>
+            <button id="neverAskBtn">Never Ask</button>
+        </div>
+    </div>
+
+    <!-- Include Leaflet.js JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        // Login/Register Functionality
+        const registerButton = document.getElementById('registerButton');
+        const loginButton = document.getElementById('loginButton');
+        const registrationForm = document.getElementById('registrationForm');
+        const loginForm = document.getElementById('loginForm');
+        const mainInterface = document.getElementById('mainInterface');
+        const permissionModal = document.getElementById('permissionModal');
+        const whileUsingBtn = document.getElementById('whileUsingBtn');
+        const alwaysOnBtn = document.getElementById('alwaysOnBtn');
+        const neverAskBtn = document.getElementById('neverAskBtn');
+
+        registerButton.addEventListener('click', function () {
+            registrationForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        loginButton.addEventListener('click', function () {
+            loginForm.classList.remove('hidden');
+            registrationForm.classList.add('hidden');
+        });
+
+        // Simulate successful login
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            loginForm.classList.add('hidden');
+            mainInterface.classList.remove('hidden');
+            permissionModal.style.display = 'flex'; // Show location permission modal
+        });
+
+        registrationForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            registrationForm.classList.add('hidden');
+            mainInterface.classList.remove('hidden');
+            permissionModal.style.display = 'flex'; // Show location permission modal
+        });
+
+        // Handle location permission modal button clicks
+        function handleButtonClick(option) {
+            alert(`Permission set to "${option}".`);
+            permissionModal.style.display = 'none'; // Hide the modal
+        }
+
+        whileUsingBtn.addEventListener('click', function() {
+            handleButtonClick('While Using the App Only');
+        });
+
+        alwaysOnBtn.addEventListener('click', function() {
+            handleButtonClick('Always On');
+        });
+
+        neverAskBtn.addEventListener('click', function() {
+            handleButtonClick('Never Ask');
+        });
+
+        // Fuel Selection and Payment
+        document.getElementById('orderButton').addEventListener('click', function () {
+            document.getElementById('fuelOptions').classList.remove('hidden');
+        });
+
+        document.getElementById('petrol-button').addEventListener('click', function () {
+            showPaymentOptions('Petrol');
+        });
+
+        document.getElementById('diesel-button').addEventListener('click', function () {
+            showPaymentOptions('Diesel');
+        });
+
+        function showPaymentOptions(fuelType) {
+            document.getElementById('fuelOptions').classList.add('hidden');
+            document.getElementById('paymentOptions').style.display = 'block';
+            document.getElementById('selectedFuel').innerText = `You selected: ${fuelType}`;
+
+            // Show the embedded map
+            document.getElementById('mapContainer').style.display = 'block';
+
+            // Initialize the map and set its view to a specific location
+            var map = L.map('map').setView([51.505, -0.09], 13);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add a marker at the user's location
+            var userMarker = L.marker([51.505, -0.09]).addTo(map);
+            userMarker.bindPopup("<b>Your Location</b>").openPopup();
+
+            // Function to add a marker for nearby petrol stations
+            function addPetrolStation(lat, lon, name) {
+                var marker = L.marker([lat, lon]).addTo(map);
+                marker.bindPopup("<b>" + name + "</b>");
+            }
+
+            // Example: Add some nearby petrol stations
+            addPetrolStation(51.5074, -0.1278, "Petrol Station 1");
+            addPetrolStation(51.5155, -0.1419, "Petrol Station 2");
+
+            // Optional: Handle map clicks to add a new marker
+            map.on('click', function (e) {
+                var latLng = e.latlng;
+                L.marker([latLng.lat, latLng.lng]).addTo(map).bindPopup("<b>New Location</b>").openPopup();
+            });
+        }
+
+        // Payment processing (mock)
+        const creditCardButton = document.getElementById('credit-card-button');
+        const netBankingButton = document.getElementById('netbanking-button');
+        const codButton = document.getElementById('cod-button');
+
+        creditCardButton.addEventListener('click', () => alert('Proceed to Credit/Debit Card Payment'));
+        netBankingButton.addEventListener('click', () => alert('Proceed to Net Banking Payment'));
+        codButton.addEventListener('click', () => alert('Cash on Delivery Selected'));
+    </script>
+</body>
+
+</html>

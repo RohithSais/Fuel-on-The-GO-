@@ -1,0 +1,16 @@
+{
+  "name": "order",
+  "version": "1.0.0",
+  "description": "A project for placing orders",
+  "main": "Order.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.3",
+    "order": "file:",
+    "react": "^18.3.1"
+  }
+}
